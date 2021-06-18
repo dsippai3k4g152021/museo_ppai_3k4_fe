@@ -10,19 +10,29 @@
                 <i class="pi pi-user user"></i>
             </div>
             <div class="user_name">
-                    <p>{{user}}</p>
+                    <p>{{usuario}}</p>
             </div>            
         </div>
     </div>
 </template>
 
 <script>
+import UserService from '../services/UserService';
+
 export default {
     name:'Header',
     data(){
-        return{ 
-            user:"Mauro Jimenez"               
+        return{
+            
+            usuario:null,             
         }
+    },
+    UserService: null,
+    created() {
+        this.UserService = new UserService();
+    },
+    mounted() {
+        this.usuario =this.UserService.getUser()
     }
 }
 </script>

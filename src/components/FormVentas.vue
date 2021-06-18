@@ -27,7 +27,7 @@
                     </div>                    
                     <div class="p-field-checkbox seccion_guia content_item">                
                         <label  class="text-primary label_guia" for="for_guia">¿Desea incluir guia?</label>
-                        <Checkbox v-on:click="changeGuia" id="idGuia" name="guia" value="guia" v-model="tarifa" />
+                        <Checkbox id="idGuia" v-model="checked" :binary="true" />
                     </div> 
                     <Button label="Cancelar" class="p-button-raised p-button-text" />
                     <Button v-on:click="next1" label="Confirmar" class="p-button-raised p-button-text" />
@@ -44,12 +44,12 @@
                 <div  class="form_content">                      
                     <div class="seccion_entradas content_item ">
                         <label class="text-primary">Ingresar la cantidad de entradas:</label>
-                        <InputNumber v-on:keypress="validarStock" id="stock" v-model="stock" mode="decimal" :min="0" :max="100" />
+                        <InputNumber v-on:keyup="validarStock" id="stock" v-model="stock" mode="decimal" :min="0" :max="100" />
                         <Message v-if="!showStock" severity="success">Stock de tickets suficientes</Message>
                         <Message  v-if="showStock" severity="warn">Le pedimos disculpas,stock de tickets insuficiente.</Message>
                     </div>                    
                     <Button  v-on:click="back" label="Volver" class="p-button-raised p-button-text" />
-                    <Button  v-on:click="next2" label="Confirmar" class="p-button-raised p-button-text" />
+                    <Button  v-on:click="next2" :disabled="showStock" label="Confirmar" class="p-button-raised p-button-text" />
                 </div>    
             </div>
         </div>
@@ -64,7 +64,7 @@
                         <p class="text-primary">Cantidad de entradas:</p>
                     </div>
                     <div class="item_value">
-                        <p>{{cantTicket}}</p>
+                        <p class="text-primary">{{cantTicket}}</p>
                     </div>
                 </div>
                 <div class="detail_item">
@@ -72,7 +72,7 @@
                         <p class="text-primary">Monto por entrada:</p>
                     </div>
                     <div class="item_value">
-                        <p>&nbsp;${{montoTicket}}</p>
+                        <p class="text-primary">&nbsp;${{montoTicket}}</p>
                     </div>
                 </div>
                 <div class="detail_item">
@@ -88,10 +88,9 @@
                         <p class="text-primary"><b>TOTAL:</b></p>
                     </div>
                     <div class="item_value">
-                        <p>&nbsp;${{montoTotal}}</p>
+                        <p class="text-primary">&nbsp;${{montoTotal}}</p>
                     </div>
                 </div>
-
             </div>
         </div>  
     </div>          
@@ -99,62 +98,58 @@
 </template>
 
 <script>
-
+import TicketService from '../services/TicketService';
 
 export default {
+
     name:'FormVentas',   
     data(){
         return{            
             contenedor1:true,
             contenedor2:false,
             contenedor3:false,
-            stockInput:0,
+            checked:false,
             showError:false,
-            showStock:false,
+            showStock:false,            
+            selectedTicket:{"id": "1000","entrada":"Publico General","visita": "Completo","guia":10,"monto":20},
             stockTickets:15,
-            selectedTicket:null,
-            tickets:[ 
-                {"id": "1000","entrada":"Publico General","visita": "Completo","guia":10,"monto":20} ,
-                {"id": "1001","entrada":"Publico General","visita": "Por exposicion","guia":15,"monto":30},
-                {"id": "1002","entrada":"Jubilados","visita": "Completo","guia":15,"monto":30},
-                {"id": "1003","entrada":"Jubilados","visita": "Por exposicion","guia":15,"monto":30},
-                {"id": "1004","entrada":"Menores","visita": "Completo","guia":15, "monto":30},
-                {"id": "1005","entrada":"Menores","visita": "Por exposicion", "guia":15, "monto":30}
-                ],            
+            tickets:null,          
             cantTicket:0,
             montoGuia:0,            
             montoTicket:0,
             montoTotal:0                 
         }
-    },   
-    created(){
-
     },
-    mounted(){ 
-
+    TicketService: null,
+    created() {
+        this.TicketService = new TicketService();
     },
-    methods: {        
-        calculateCost(){
-            this.montoTotal=this.montoGuia+this.montoTicket*this.cantTicket
-        },
-        changeGuia(){
-            let check= document.getElementById('idGuia').checked
-            if(check){
-                this.montoGuia=0;                
-            }
-            else{
-                this.montoGuia=this.selectedTicket.guia              
-            }               
-        },
+    mounted() {
+        this.tickets =this.TicketService.getProductsAll()
+    },
+    methods: {
         next1(){
+            let check= document.getElementById('idGuia').checked 
+            if(check){
+                
+                this.montoGuia=this.selectedTicket.guia 
+            }                      
+            this.montoTicket=this.selectedTicket.monto
+
             if(this.selectedTicket == null){
                 this.showError=true;
             }else{
                 this.showError=false;
                 this.contenedor1=false;
                 this.contenedor2=true;
-            }            
-
+            }  
+        },
+        next2(){            
+            this.cantTicket=this.stock;
+            this.montoTotal=(this.cantTicket*this.montoTicket)+this.montoGuia;
+            console.log( this.montoTotal)
+            this.contenedor2=false;
+            this.contenedor3=true;            
         },
         back(){
             this.contenedor2=false;
@@ -162,9 +157,8 @@ export default {
 
         },
         validarStock(){            
-            let stock= document.getElementById('stock').value
-            console.log(stock)
-           if(this.stock> this.stockTickets){
+            let stock= document.getElementById('stock').value           
+           if(stock> this.stockTickets){
                this.showStock=true;
            }
            else{

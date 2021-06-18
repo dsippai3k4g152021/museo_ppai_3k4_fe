@@ -1,4 +1,5 @@
 
+
 export default class TicketService {
     data=[ 
         {"entrada":"Publico General","visita": "Completo","guia":10,"monto":20} ,
@@ -9,10 +10,9 @@ export default class TicketService {
         {"entrada":"Menores","visita": "Por exposicion", "guia":15, "monto":30}
         ]
 
-    getProductsSmall() {
+    getProductsAll() {
         return this.data;
     }
-
    
 }
     
